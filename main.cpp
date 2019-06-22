@@ -15,6 +15,17 @@ int drawgrid;
 int drawaxes;
 double angle;
 int debug;
+int mapFlag=0;
+struct Moon{
+
+    double x,y,z,rad;
+    Moon(double a,double b,double c,double r){
+        x=a;
+        y=b;
+        z=c;
+        rad=r;
+    }
+};
 struct point
 {
     double x,y,z;
@@ -33,11 +44,13 @@ public:
 
 
 };
-vec pos(150,150,25);
+vec pos(475,475,25);
 vec l(-sqrt(0.5),-sqrt(0.5),0);
 vec r(-sqrt(0.5),sqrt(0.5),0);
 vec u(0,0,1);
-
+vec temp_pos(0,0,0);
+vec temp_l(0,0,0);
+Moon moon(-200,-200,200,20);
 void drawAxes()
 {
     if(drawaxes==1)
@@ -245,43 +258,93 @@ void drawWallGeneric(double ax,double ay,double bx,double by,double height,doubl
 
 
 }
-
-void drawSS()
+void drawOrion()
 {
 
-
-    glColor3f(1.0,0.0,0.0);
-    drawWallGeneric(50,50,50,100,50,5);
-
-    glColor3f(0.30,0.20,0.10);   //ground
-    drawWallGeneric(-250,250,250,250,0,1000);
-
-    glColor3f(1,1,1);
+    glPopMatrix();
     glPushMatrix();
     {
-        glTranslated(0,0,1000);
-        drawSphere(100,50,50);
-    }
-    glPopMatrix();
-     glPushMatrix();
-    {
-        glTranslated(-150,150,1000);
-        drawSphere(7,50,50);
+        glTranslated(250,300,1000);
+        drawSphere(6,50,50);
     }
     glPopMatrix();
     glPushMatrix();
     {
-        glTranslated(120,200,1000);
+        glTranslated(200,300,1000);
         drawSphere(6,50,50);
     }
     glPopMatrix();
 
     glPushMatrix();
     {
-        glTranslated(200,100,1000);
-        drawSphere(5,50,50);
+        glTranslated(150,300,1000);
+        drawSphere(6,50,50);
     }
     glPopMatrix();
+
+    glColor3f(1,0.7,0);
+    glPushMatrix();
+    {
+        glTranslated(450,600,1000);
+        drawSphere(6,50,50);
+    }
+    glColor3f(1,1,1);
+    glPopMatrix();
+    glPushMatrix();
+    {
+
+        glTranslated(-250,600,1000);
+        drawSphere(6,50,50);
+    }
+    glPopMatrix();
+
+    glPushMatrix();
+    {
+        glTranslated(500,-150,1000);
+        drawSphere(6,50,50);
+    }
+
+    glPopMatrix();
+    glPushMatrix();
+    {
+        glTranslated(-100,-175,1000);
+        drawSphere(6,50,50);
+    }
+    glPopMatrix();
+
+}
+void buildTheMaze()
+{
+    glColor3f(1.0,0.0,0.0);
+    //border
+    drawWallGeneric(-500,-500,-500,500,50,5);
+    drawWallGeneric(-500,-500,500,-500,50,5);
+    drawWallGeneric(500,500,-500,500,50,5);
+    drawWallGeneric(500,500,500,-500,50,5);
+    //main maze
+    drawWallGeneric(400,350,400,0,50,5);
+    drawWallGeneric(400,400,0,400,50,5);
+    drawWallGeneric(300,300,-300,-300,50,5);
+
+}
+void drawSS()
+{
+
+
+
+
+    glColor3f(0.30,0.20,0.10);   //ground
+    drawWallGeneric(-500,-500,-500,500,0,1000);
+
+
+    glColor3f(1,1,1);
+    glPushMatrix();
+    {
+        glTranslated(moon.x,moon.y,moon.z);//moon
+        drawSphere(moon.rad,50,50);
+    }
+    drawOrion();
+    buildTheMaze();
 
 }
 
@@ -373,6 +436,56 @@ void keyboardListener(unsigned char key, int x,int y)
     case 'x':
         debug=1;
         break;
+    case 'm':
+        if(mapFlag==0)
+        {
+            mapFlag=1;
+            temp_pos.x=pos.x;
+            temp_pos.y=pos.y;
+            temp_pos.z=pos.z;
+            temp_l.x=l.x;
+            temp_l.y=l.y;
+            temp_l.z=l.z;
+            pos.x=0;
+            pos.y=0;
+            pos.z=900;
+            l.x=0;
+            l.y=0;
+            l.z=-1;
+
+            angle=0.05;
+            l.x=l.x*cos(angle)+u.x*sin(angle);
+            l.y=l.y*cos(angle)+u.y*sin(angle);
+            l.z=l.z*cos(angle)+u.z*sin(angle);
+            //now, u=r*l
+            u.x=r.y*l.z-r.z*l.y;
+            u.y=r.z*l.x-r.x*l.z;
+            u.z=r.x*l.y-r.y*l.x;
+
+            moon.rad=0;
+
+        }
+        else
+        {
+            mapFlag=0;
+            pos.x=temp_pos.x;
+            pos.y=temp_pos.y;
+            pos.z=temp_pos.z;
+            l.x=temp_l.x;
+            l.y=temp_l.y;
+            l.z=temp_l.z;
+
+            angle=0.05;
+            l.x=l.x*cos(angle)+u.x*sin(angle);
+            l.y=l.y*cos(angle)+u.y*sin(angle);
+            l.z=l.z*cos(angle)+u.z*sin(angle);
+            //now, u=r*l
+            u.x=r.y*l.z-r.z*l.y;
+            u.y=r.z*l.x-r.x*l.z;
+            u.z=r.x*l.y-r.y*l.x;
+            moon.rad=10;
+        }
+
     default:
         break;
     }
