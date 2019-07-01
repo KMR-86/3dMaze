@@ -20,6 +20,9 @@ int mapFlag=0;
 double playerRad=0;
 int playerRadFlag=0;
 int start = clock();
+int sec,mn=0,hour=0;
+int gameOver=0;
+std::string strSec,strMn,strHour;
 struct Moon
 {
 
@@ -47,16 +50,43 @@ public:
         y=b;
         z=c;
     }
+    vec()
+    {
+        x=0;
+        y=0;
+        z=0;
+    }
 
 
 };
-vec pos(475,475,25);
+class Destination
+{
+
+public:
+
+    vec a;
+    vec b;
+    Destination(double ax,double ay,double bx,double by)
+    {
+
+        a.x=ax;
+        a.y=ay;
+        a.z=0;
+        b.x=bx;
+        b.y=by;
+        b.z=0;
+    }
+
+};
+vec pos(450,450,25);
 vec l(-sqrt(0.5),-sqrt(0.5),0);
 vec r(-sqrt(0.5),sqrt(0.5),0);
 vec u(0,0,1);
 vec temp_pos(1000,1000,1000);
 vec temp_l(0,0,0);
 Moon moon(-200,-200,200,20);
+Destination destination(-250,-250,-300,-250);
+
 void drawAxes()
 {
     if(drawaxes==1)
@@ -324,7 +354,7 @@ void buildTheMaze()
 {
     //draw destination
     glColor3f(0.0,0.0,1.0);
-    drawWallGeneric(-250,-250,-300,-250,50,50);
+    drawWallGeneric(destination.a.x,destination.a.y,destination.b.x,destination.b.y,50,50);
     //draw player position
     glPushMatrix();
     {
@@ -343,7 +373,30 @@ void buildTheMaze()
     //main maze
     drawWallGeneric(400,350,400,0,50,5);
     drawWallGeneric(400,400,0,400,50,5);
-    drawWallGeneric(300,300,-300,-300,50,5);
+    drawWallGeneric(400,300,300,300,50,5);
+    drawWallGeneric(300,300,300,350,50,5);
+    drawWallGeneric(-100,0,400,0,50,15);
+    drawWallGeneric(-200,-70,500,-70,50,15);
+    drawWallGeneric(-200,-70,-200,200,50,15);
+    drawWallGeneric(-200,200,200,200,50,15);
+    drawWallGeneric(200,250,400,200,50,15);
+    drawWallGeneric(-50,500,-50,300,50,15);
+    drawWallGeneric(0,400,0,250,50,15);
+    drawWallGeneric(0,250,-200,250,50,10);
+    drawWallGeneric(-200,250,-200,500,50,10);
+    drawWallGeneric(-300,-150,500,-150,50,10);
+    drawWallGeneric(-300,-150,-300,450,50,10);
+    drawWallGeneric(300,80,-100,80,50,15);
+    drawWallGeneric(-380,500,-380,150,50,10);
+    drawWallGeneric(-380,100,-380,-250,50,10);
+    drawWallGeneric(-380,-300,-380,-330,50,10);
+    drawWallGeneric(-380,-100,-300,-100,50,10);
+    drawWallGeneric(-380,-330,400,-330,50,5);
+    drawWallGeneric(-200,-250,300,-250,50,3);
+    drawWallGeneric(-200,-250,-200,-170,50,5);
+    drawWallGeneric(-300,-400,400,-400,50,1);
+    drawWallGeneric(400,-330,400,-400,50,1);
+
 
 
 
@@ -373,11 +426,11 @@ void forceLookForward()
 
     }
 }
-void output(int x, int y,int z, float r, float g, float b, void *font, std::string str)
+void output(int x, int y,int z, float r, float g, float b, int portX,int portY,int portWidth,int portHeight,void *font, std::string str)
 {
-    glViewport(400,400,0,0);
+    glViewport(portX,portY,portWidth,portHeight);
     glColor3f( r, g, b );
-    glRasterPos2f(0.0,0.0);
+    glRasterPos2f(x,y);
     int len, i;
     len = (int)str.size();
     for (i = 0; i < len; i++)
@@ -385,141 +438,104 @@ void output(int x, int y,int z, float r, float g, float b, void *font, std::stri
         glutBitmapCharacter(font, str[i]);
     }
 }
+bool isGameOver()
+{
+    if(destination.a.x>=pos.x && destination.b.x<=pos.x && destination.a.y<=pos.y && destination.b.y+50>=pos.y)
+    {
+        return true;
+
+    }
+    return false;
+}
 void drawSS()
 {
 
 
 
 
-
-    glViewport(0,0,600,500);
-    glColor3f(0.30,0.20,0.10);   //ground
-    drawWallGeneric(-500,-500,-500,500,0,1000);
-
-
-    glColor3f(1,1,1);
-    glPushMatrix();
+    if(!isGameOver())
     {
-        glTranslated(moon.x,moon.y,moon.z);//moon
-        drawSphere(moon.rad,50,50);
+
+        glViewport(0,0,600,500);
+        glColor3f(0.30,0.20,0.10);   //ground
+        drawWallGeneric(-500,-500,-500,500,0,1000);
+
+
+        glColor3f(1,1,1);
+        glPushMatrix();
+        {
+            glTranslated(moon.x,moon.y,moon.z);//moon
+            drawSphere(moon.rad,50,50);
+        }
+        drawOrion();
+        buildTheMaze();
+        glPushMatrix();
+        {
+            int n=((clock()-start)/1000);
+
+            sec=n%60;
+            mn=n/60;
+            hour=n/3600;
+            std::stringstream ss;
+            ss << sec;
+            strSec = ss.str();
+            ss.str( std::string() );
+            ss.clear();
+            ss << mn;
+            strMn = ss.str();
+            ss.str( std::string() );
+            ss.clear();
+            ss<<hour;
+            strHour = ss.str();
+            std:: string str=strHour+"::"+strMn+"::"+strSec;
+            output(0,0,0,0,1,0,400,400,10,100,(void *)font,str);
+        }
+        glPopMatrix();
+
     }
-    drawOrion();
-    buildTheMaze();
-    glPushMatrix();
+    else
     {
-        int n=((clock()-start)/1000);
-        int sec,mn=0,hour=0;
-        sec=n%60;
-        mn=n/60;
-        hour=n/3600;
-        std::stringstream ss;
-        ss << sec;
-        std::string strSec = ss.str();
-        ss.str( std::string() );
-        ss.clear();
-        ss << mn;
-        std::string strMn = ss.str();
-        ss.str( std::string() );
-        ss.clear();
-        ss<<hour;
-        std::string strHour = ss.str();
-        std:: string str=strHour+"::"+strMn+"::"+strSec;
-        output(0,0,0,0,1,0,(void *)font,str);
+        std::string str="your TIME: "+strHour+"::"+strMn+"::"+strSec;
+        l.x=150;
+        l.y=150;
+        gameOver=1;
+        output(0,0,0,0,1,0,0,0,400,600,(void *)font,str);
     }
-    glPopMatrix();
+
+
 
 }
 
 void keyboardListener(unsigned char key, int x,int y)
 {
     double angle=0.5;
-
-    switch(key)
+    if(gameOver==0)
     {
-
-    case '1':
-        angle=0.05;
-        r.x=r.x*cos(angle)+l.x*sin(angle);
-        r.y=r.y*cos(angle)+l.y*sin(angle);
-        r.z=r.z*cos(angle)+l.z*sin(angle);
-        //now, l=u*r
-        l.x=u.y*r.z-u.z*r.y;
-        l.y=u.z*r.x-u.x*r.z;
-        l.z=u.x*r.y-u.y*r.x;
-        break;
-
-    case '2':
-        angle=-0.05;
-        r.x=r.x*cos(angle)+l.x*sin(angle);
-        r.y=r.y*cos(angle)+l.y*sin(angle);
-        r.z=r.z*cos(angle)+l.z*sin(angle);
-        //now, l=u*r
-        l.x=u.y*r.z-u.z*r.y;
-        l.y=u.z*r.x-u.x*r.z;
-        l.z=u.x*r.y-u.y*r.x;
-        break;
-    case '3'://look up
-        angle=0.05;
-        l.x=l.x*cos(angle)+u.x*sin(angle);
-        l.y=l.y*cos(angle)+u.y*sin(angle);
-        l.z=l.z*cos(angle)+u.z*sin(angle);
-        //now, u=r*l
-        u.x=r.y*l.z-r.z*l.y;
-        u.y=r.z*l.x-r.x*l.z;
-        u.z=r.x*l.y-r.y*l.x;
-        break;
-    case '4'://look down
-        angle=-0.05;
-        l.x=l.x*cos(angle)+u.x*sin(angle);
-        l.y=l.y*cos(angle)+u.y*sin(angle);
-        l.z=l.z*cos(angle)+u.z*sin(angle);
-        //now, u=r*l
-        u.x=r.y*l.z-r.z*l.y;
-        u.y=r.z*l.x-r.x*l.z;
-        u.z=r.x*l.y-r.y*l.x;
-        break;
-
-    case 'w':
-        double unit;
-
-        unit=sqrt(u.x*u.x+u.y*u.y+u.z*u.z);
-        pos.x=pos.x+u.x/unit;
-        pos.y=pos.y+u.y/unit;
-        pos.z=pos.z+u.z/unit;
-        break;
-    case 's':
-
-        unit=sqrt(u.x*u.x+u.y*u.y+u.z*u.z);
-        pos.x=pos.x-u.x/unit;
-        pos.y=pos.y-u.y/unit;
-        pos.z=pos.z-u.z/unit;
-        break;
-    case 'x':
-        if(debug==0)
-            debug=1;
-        else
-            debug=0;
-        break;
-    case 'l':
-        forceLookForward();
-        break;
-    case 'm':
-        if(mapFlag==0)
+        switch(key)
         {
-            mapFlag=1;
-            temp_pos.x=pos.x;
-            temp_pos.y=pos.y;
-            temp_pos.z=pos.z;
-            temp_l.x=l.x;
-            temp_l.y=l.y;
-            temp_l.z=l.z;
-            pos.x=0;
-            pos.y=0;
-            pos.z=900;
-            l.x=0;
-            l.y=0;
-            l.z=-1;
 
+        case '1':
+            angle=0.05;
+            r.x=r.x*cos(angle)+l.x*sin(angle);
+            r.y=r.y*cos(angle)+l.y*sin(angle);
+            r.z=r.z*cos(angle)+l.z*sin(angle);
+            //now, l=u*r
+            l.x=u.y*r.z-u.z*r.y;
+            l.y=u.z*r.x-u.x*r.z;
+            l.z=u.x*r.y-u.y*r.x;
+            break;
+
+        case '2':
+            angle=-0.05;
+            r.x=r.x*cos(angle)+l.x*sin(angle);
+            r.y=r.y*cos(angle)+l.y*sin(angle);
+            r.z=r.z*cos(angle)+l.z*sin(angle);
+            //now, l=u*r
+            l.x=u.y*r.z-u.z*r.y;
+            l.y=u.z*r.x-u.x*r.z;
+            l.z=u.x*r.y-u.y*r.x;
+            break;
+        case '3'://look up
             angle=0.05;
             l.x=l.x*cos(angle)+u.x*sin(angle);
             l.y=l.y*cos(angle)+u.y*sin(angle);
@@ -528,23 +544,9 @@ void keyboardListener(unsigned char key, int x,int y)
             u.x=r.y*l.z-r.z*l.y;
             u.y=r.z*l.x-r.x*l.z;
             u.z=r.x*l.y-r.y*l.x;
-
-            moon.rad=0;
-
-
-
-        }
-        else
-        {
-            mapFlag=0;
-            pos.x=temp_pos.x;
-            pos.y=temp_pos.y;
-            pos.z=temp_pos.z;
-            l.x=temp_l.x;
-            l.y=temp_l.y;
-            l.z=temp_l.z;
-
-            angle=0.05;
+            break;
+        case '4'://look down
+            angle=-0.05;
             l.x=l.x*cos(angle)+u.x*sin(angle);
             l.y=l.y*cos(angle)+u.y*sin(angle);
             l.z=l.z*cos(angle)+u.z*sin(angle);
@@ -552,90 +554,140 @@ void keyboardListener(unsigned char key, int x,int y)
             u.x=r.y*l.z-r.z*l.y;
             u.y=r.z*l.x-r.x*l.z;
             u.z=r.x*l.y-r.y*l.x;
-            moon.rad=10;
+            break;
 
+
+        case 'x':
+            if(debug==0)
+                debug=1;
+            else
+                debug=0;
+            break;
+        case 'l':
+            forceLookForward();
+            break;
+        case 'm':
+            if(mapFlag==0)
+            {
+                mapFlag=1;
+                temp_pos.x=pos.x;
+                temp_pos.y=pos.y;
+                temp_pos.z=pos.z;
+                temp_l.x=l.x;
+                temp_l.y=l.y;
+                temp_l.z=l.z;
+                pos.x=-50;
+                pos.y=100;
+                pos.z=990;
+                l.x=0;
+                l.y=0;
+                l.z=-1;
+
+                angle=0.05;
+                l.x=l.x*cos(angle)+u.x*sin(angle);
+                l.y=l.y*cos(angle)+u.y*sin(angle);
+                l.z=l.z*cos(angle)+u.z*sin(angle);
+                //now, u=r*l
+                u.x=r.y*l.z-r.z*l.y;
+                u.y=r.z*l.x-r.x*l.z;
+                u.z=r.x*l.y-r.y*l.x;
+
+                moon.rad=0;
+
+
+
+            }
+            else
+            {
+                mapFlag=0;
+                pos.x=temp_pos.x;
+                pos.y=temp_pos.y;
+                pos.z=temp_pos.z;
+                l.x=temp_l.x;
+                l.y=temp_l.y;
+                l.z=temp_l.z;
+
+                angle=0.05;
+                l.x=l.x*cos(angle)+u.x*sin(angle);
+                l.y=l.y*cos(angle)+u.y*sin(angle);
+                l.z=l.z*cos(angle)+u.z*sin(angle);
+                //now, u=r*l
+                u.x=r.y*l.z-r.z*l.y;
+                u.y=r.z*l.x-r.x*l.z;
+                u.z=r.x*l.y-r.y*l.x;
+                moon.rad=10;
+
+            }
+
+        default:
+            break;
         }
-
-    default:
-        break;
     }
 }
 
 
 void specialKeyListener(int key, int x,int y)
 {
-    switch(key)
+    if(gameOver==0)
     {
-    case GLUT_KEY_DOWN:		//down arrow key
-        double unit;
-        if(pos.z==25)
+        switch(key)
         {
-            forceLookForward();
+        case GLUT_KEY_DOWN:		//down arrow key
+            double unit;
+            if(pos.z==25)
+            {
+                forceLookForward();
 
-            unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
-            pos.x=pos.x-l.x/unit;
-            pos.y=pos.y-l.y/unit;
-            pos.z=pos.z-l.z/unit;
+                unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
+                pos.x=pos.x-l.x/unit;
+                pos.y=pos.y-l.y/unit;
+                pos.z=pos.z-l.z/unit;
 
+            }
+            break;
+        case GLUT_KEY_UP:		// up arrow key
+            if(pos.z==25)
+            {
+                forceLookForward();
+                unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
+                pos.x=pos.x+l.x/unit;
+                pos.y=pos.y+l.y/unit;
+                pos.z=pos.z+l.z/unit;
+            }
+
+            break;
+
+        case GLUT_KEY_RIGHT:
+
+            unit=sqrt(r.x*r.x+r.y*r.y+r.z*r.z);
+            pos.x=pos.x+r.x/unit;
+            pos.y=pos.y+r.y/unit;
+            pos.z=pos.z+r.z/unit;
+            break;
+        case GLUT_KEY_LEFT:
+
+            unit=sqrt(r.x*r.x+r.y*r.y+r.z*r.z);
+            pos.x=pos.x-r.x/unit;
+            pos.y=pos.y-r.y/unit;
+            pos.z=pos.z-r.z/unit;
+
+            break;
+
+
+        case GLUT_KEY_INSERT:
+            break;
+
+        case GLUT_KEY_HOME:
+
+
+            break;
+        case GLUT_KEY_END:
+
+            break;
+
+        default:
+            break;
         }
-        break;
-    case GLUT_KEY_UP:		// up arrow key
-        if(pos.z==25)
-        {
-            forceLookForward();
-            unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
-            pos.x=pos.x+l.x/unit;
-            pos.y=pos.y+l.y/unit;
-            pos.z=pos.z+l.z/unit;
-        }
-
-        break;
-
-    case GLUT_KEY_RIGHT:
-
-        unit=sqrt(r.x*r.x+r.y*r.y+r.z*r.z);
-        pos.x=pos.x+r.x/unit;
-        pos.y=pos.y+r.y/unit;
-        pos.z=pos.z+r.z/unit;
-        break;
-    case GLUT_KEY_LEFT:
-
-        unit=sqrt(r.x*r.x+r.y*r.y+r.z*r.z);
-        pos.x=pos.x-r.x/unit;
-        pos.y=pos.y-r.y/unit;
-        pos.z=pos.z-r.z/unit;
-
-        break;
-
-    case GLUT_KEY_PAGE_UP:
-
-        unit=sqrt(u.x*u.x+u.y*u.y+u.z*u.z);
-        pos.x=pos.x+u.x/unit;
-        pos.y=pos.y+u.y/unit;
-        pos.z=pos.z+u.z/unit;
-
-        break;
-    case GLUT_KEY_PAGE_DOWN:
-
-        unit=sqrt(u.x*u.x+u.y*u.y+u.z*u.z);
-        pos.x=pos.x-u.x/unit;
-        pos.y=pos.y-u.y/unit;
-        pos.z=pos.z-u.z/unit;
-        break;
-
-    case GLUT_KEY_INSERT:
-        break;
-
-    case GLUT_KEY_HOME:
-
-
-        break;
-    case GLUT_KEY_END:
-
-        break;
-
-    default:
-        break;
     }
 }
 
@@ -731,6 +783,7 @@ void animate()
         std::cout<<l.x<<" "<<l.y<<" "<<l.z<<"\n";
         std::cout<<r.x<<" "<<r.y<<" "<<r.z<<"\n";
         std::cout<<u.x<<" "<<u.y<<" "<<u.z<<"\n";
+        std::cout<<"pos "<<pos.x<<" "<<pos.y<<" "<<pos.z<<"\n";
     }
     if(mapFlag==1&&playerRadFlag==0&&playerRad<=20)
     {
