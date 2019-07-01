@@ -19,6 +19,7 @@ int debug;
 int mapFlag=0;
 double playerRad=0;
 int playerRadFlag=0;
+int start = clock();
 struct Moon
 {
 
@@ -372,25 +373,26 @@ void forceLookForward()
 
     }
 }
-void output(int x, int y,int z, float r, float g, float b, void *font, char *str)
+void output(int x, int y,int z, float r, float g, float b, void *font, std::string str)
 {
-
-  glColor3f( r, g, b );
-  glRasterPos2f(x,y);
-  int len, i;
-  len = (int)strlen(str);
-  for (i = 0; i < len; i++) {
-    glutBitmapCharacter(font, str[i]);
-  }
+    glViewport(400,400,0,0);
+    glColor3f( r, g, b );
+    glRasterPos2f(0.0,0.0);
+    int len, i;
+    len = (int)str.size();
+    for (i = 0; i < len; i++)
+    {
+        glutBitmapCharacter(font, str[i]);
+    }
 }
 void drawSS()
 {
 
 
 
-    glViewport(400,400,0,50);
-    output(0,0,0,0,1,0,(void *)font,"hello");
-    glViewport(0,0,500,500);
+
+
+    glViewport(0,0,600,500);
     glColor3f(0.30,0.20,0.10);   //ground
     drawWallGeneric(-500,-500,-500,500,0,1000);
 
@@ -403,7 +405,28 @@ void drawSS()
     }
     drawOrion();
     buildTheMaze();
-
+    glPushMatrix();
+    {
+        int n=((clock()-start)/1000);
+        int sec,mn=0,hour=0;
+        sec=n%60;
+        mn=n/60;
+        hour=n/3600;
+        std::stringstream ss;
+        ss << sec;
+        std::string strSec = ss.str();
+        ss.str( std::string() );
+        ss.clear();
+        ss << mn;
+        std::string strMn = ss.str();
+        ss.str( std::string() );
+        ss.clear();
+        ss<<hour;
+        std::string strHour = ss.str();
+        std:: string str=strHour+"::"+strMn+"::"+strSec;
+        output(0,0,0,0,1,0,(void *)font,str);
+    }
+    glPopMatrix();
 
 }
 
@@ -726,7 +749,8 @@ void animate()
             playerRadFlag=0;
         }
     }
-    else if(mapFlag==0){
+    else if(mapFlag==0)
+    {
         playerRad=0;
         playerRadFlag=0;
     }
