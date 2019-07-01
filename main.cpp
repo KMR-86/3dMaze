@@ -8,6 +8,7 @@
 #include <windows.h>
 
 #define pi 3.141529
+const int font=(int)GLUT_BITMAP_9_BY_15;
 double cubeLen=35,sphereRad=7;
 double cameraHeight;
 double cameraAngle;
@@ -16,10 +17,14 @@ int drawaxes;
 double angle;
 int debug;
 int mapFlag=0;
-struct Moon{
+double playerRad=0;
+int playerRadFlag=0;
+struct Moon
+{
 
     double x,y,z,rad;
-    Moon(double a,double b,double c,double r){
+    Moon(double a,double b,double c,double r)
+    {
         x=a;
         y=b;
         z=c;
@@ -48,7 +53,7 @@ vec pos(475,475,25);
 vec l(-sqrt(0.5),-sqrt(0.5),0);
 vec r(-sqrt(0.5),sqrt(0.5),0);
 vec u(0,0,1);
-vec temp_pos(0,0,0);
+vec temp_pos(1000,1000,1000);
 vec temp_l(0,0,0);
 Moon moon(-200,-200,200,20);
 void drawAxes()
@@ -161,7 +166,11 @@ void drawWallGeneric(double ax,double ay,double bx,double by,double height,doubl
 
 
     double dis = sqrt((ax-bx)*(ax-bx)+(ay-by)*(ay-by));
-
+    double x1,y1,x2,y2;
+    x1=ax+width*(by-ay)/dis;
+    y1=ay+width*(ax-bx)/dis;
+    x2=bx+width*(by-ay)/dis;
+    y2=by+width*(ax-bx)/dis;
     glPushMatrix();
     {
         glBegin(GL_QUADS);
@@ -178,22 +187,19 @@ void drawWallGeneric(double ax,double ay,double bx,double by,double height,doubl
 
     glPushMatrix();
     {
-        glTranslatef(width,0,0);
+        //glTranslatef(width,0,0);
         glBegin(GL_QUADS);
         {
-            glVertex3f( ax, ay,0);
-            glVertex3f( bx,by,0);
-            glVertex3f(bx,by,height);
-            glVertex3f(ax,ay,height);
+            glVertex3f( x1, y1,0);
+            glVertex3f( x2,y2,0);
+            glVertex3f(x2,y2,height);
+            glVertex3f(x1,y1,height);
         }
         glEnd();
     }
     glPopMatrix();
-    double x1,y1,x2,y2;
-    x1=ax+width*(by-ay)/dis;
-    y1=ay+width*(ax-bx)/dis;
-    x2=bx+width*(by-ay)/dis;
-    y2=by+width*(ax-bx)/dis;
+
+
 
     glPushMatrix();
     {
@@ -315,6 +321,18 @@ void drawOrion()
 }
 void buildTheMaze()
 {
+    //draw destination
+    glColor3f(0.0,0.0,1.0);
+    drawWallGeneric(-250,-250,-300,-250,50,50);
+    //draw player position
+    glPushMatrix();
+    {
+        glTranslated(temp_pos.x,temp_pos.y,temp_pos.z);
+        drawSphere(playerRad,50,50);
+        glTranslated(-temp_pos.x,-temp_pos.y,-temp_pos.z);
+    }
+    glPopMatrix();
+
     glColor3f(1.0,0.0,0.0);
     //border
     drawWallGeneric(-500,-500,-500,500,50,5);
@@ -326,13 +344,53 @@ void buildTheMaze()
     drawWallGeneric(400,400,0,400,50,5);
     drawWallGeneric(300,300,-300,-300,50,5);
 
+
+
+}
+void forceLookForward()
+{
+
+    l.z=0;
+    double d;
+    d=sqrt(l.x*l.x+l.y*l.y);
+    l.x=l.x/d;
+    l.y=l.y/d;
+    if(r.x*l.y-r.y*l.x>0)
+    {
+        u.x=r.y*l.z-r.z*l.y;
+        u.y=r.z*l.x-r.x*l.z;
+        u.z=r.x*l.y-r.y*l.x;
+    }
+    else
+    {
+        u.x=-r.y*l.z+r.z*l.y;
+        u.y=-r.z*l.x+r.x*l.z;
+        u.z=-r.x*l.y+r.y*l.x;
+
+        l.x=-l.x;
+        l.y=-l.y;
+
+    }
+}
+void output(int x, int y,int z, float r, float g, float b, void *font, char *str)
+{
+
+  glColor3f( r, g, b );
+  glRasterPos2f(x,y);
+  int len, i;
+  len = (int)strlen(str);
+  for (i = 0; i < len; i++) {
+    glutBitmapCharacter(font, str[i]);
+  }
 }
 void drawSS()
 {
 
 
 
-
+    glViewport(400,400,0,50);
+    output(0,0,0,0,1,0,(void *)font,"hello");
+    glViewport(0,0,500,500);
     glColor3f(0.30,0.20,0.10);   //ground
     drawWallGeneric(-500,-500,-500,500,0,1000);
 
@@ -345,6 +403,7 @@ void drawSS()
     }
     drawOrion();
     buildTheMaze();
+
 
 }
 
@@ -396,28 +455,7 @@ void keyboardListener(unsigned char key, int x,int y)
         u.y=r.z*l.x-r.x*l.z;
         u.z=r.x*l.y-r.y*l.x;
         break;
-    case '5':
-        angle=0.05;
-        u.x=u.x*cos(angle)+r.x*sin(angle);
-        u.y=u.y*cos(angle)+r.y*sin(angle);
-        u.z=u.z*cos(angle)+r.z*sin(angle);
 
-        //now, r=l*u
-        r.x=l.y*u.z-l.z*u.y;
-        r.y=l.z*u.x-l.x*u.z;
-        r.z=l.x*u.y-l.y*u.x;
-        break;
-    case '6':
-        angle=-0.05;
-        u.x=u.x*cos(angle)+r.x*sin(angle);
-        u.y=u.y*cos(angle)+r.y*sin(angle);
-        u.z=u.z*cos(angle)+r.z*sin(angle);
-
-        //now, r=l*u
-        r.x=l.y*u.z-l.z*u.y;
-        r.y=l.z*u.x-l.x*u.z;
-        r.z=l.x*u.y-l.y*u.x;
-        break;
     case 'w':
         double unit;
 
@@ -434,7 +472,13 @@ void keyboardListener(unsigned char key, int x,int y)
         pos.z=pos.z-u.z/unit;
         break;
     case 'x':
-        debug=1;
+        if(debug==0)
+            debug=1;
+        else
+            debug=0;
+        break;
+    case 'l':
+        forceLookForward();
         break;
     case 'm':
         if(mapFlag==0)
@@ -464,6 +508,8 @@ void keyboardListener(unsigned char key, int x,int y)
 
             moon.rad=0;
 
+
+
         }
         else
         {
@@ -484,6 +530,7 @@ void keyboardListener(unsigned char key, int x,int y)
             u.y=r.z*l.x-r.x*l.z;
             u.z=r.x*l.y-r.y*l.x;
             moon.rad=10;
+
         }
 
     default:
@@ -498,17 +545,27 @@ void specialKeyListener(int key, int x,int y)
     {
     case GLUT_KEY_DOWN:		//down arrow key
         double unit;
-        unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
-        pos.x=pos.x-l.x/unit;
-        pos.y=pos.y-l.y/unit;
-        pos.z=pos.z-l.z/unit;
+        if(pos.z==25)
+        {
+            forceLookForward();
+
+            unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
+            pos.x=pos.x-l.x/unit;
+            pos.y=pos.y-l.y/unit;
+            pos.z=pos.z-l.z/unit;
+
+        }
         break;
     case GLUT_KEY_UP:		// up arrow key
+        if(pos.z==25)
+        {
+            forceLookForward();
+            unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
+            pos.x=pos.x+l.x/unit;
+            pos.y=pos.y+l.y/unit;
+            pos.z=pos.z+l.z/unit;
+        }
 
-        unit=sqrt(l.x*l.x+l.y*l.y+l.z*l.z);
-        pos.x=pos.x+l.x/unit;
-        pos.y=pos.y+l.y/unit;
-        pos.z=pos.z+l.z/unit;
         break;
 
     case GLUT_KEY_RIGHT:
@@ -646,7 +703,33 @@ void display()
 
 void animate()
 {
-    angle+=0.05;
+    if(debug==1)
+    {
+        std::cout<<l.x<<" "<<l.y<<" "<<l.z<<"\n";
+        std::cout<<r.x<<" "<<r.y<<" "<<r.z<<"\n";
+        std::cout<<u.x<<" "<<u.y<<" "<<u.z<<"\n";
+    }
+    if(mapFlag==1&&playerRadFlag==0&&playerRad<=20)
+    {
+
+        playerRad++;
+        if(playerRad==20)
+        {
+            playerRadFlag=1;
+        }
+    }
+    else if(mapFlag==1&&playerRadFlag==1&&playerRad>0)
+    {
+        playerRad--;
+        if(playerRad==1)
+        {
+            playerRadFlag=0;
+        }
+    }
+    else if(mapFlag==0){
+        playerRad=0;
+        playerRadFlag=0;
+    }
     //codes for any changes in Models, Camera
     glutPostRedisplay();
 }
